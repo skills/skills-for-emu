@@ -1,4 +1,4 @@
-skills/*
-actions/checkout@*
-GrantBirki/comment@*
+skills/*,
+actions/checkout@*,
+GrantBirki/comment@*,
 peter-evans/find-comment@*
