@@ -13,10 +13,10 @@ Follow these simple steps to enable GitHub Skills usage in your Enterprise Manag
 
 Before you begin, decide whether to use a dedicated learning organization or an existing one.
 
-| Strategy                            | Recommendation                                                                                                                                                                                               | Recommended |
-| :---------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------- |
-| **Dedicated Learning Organization** | Having a dedicated organization exclusively for learning purposes is recommended to isolate learning activities from production work, have separate security policies and reduce                             | ✅          |
-| **Existing Organization**           | If creating a new organization is not feasible, you may use an existing one. However, be aware that the following configuration changes will apply to all members and repositories within that organization. | ❌          |
+| Strategy | Recommendation | Recommended |
+| :--- | :--- | :--- |
+| **Dedicated Learning Organization** | Having a dedicated organization exclusively for learning purposes is recommended to isolate learning activities from production work with potentially different security policies and restrictions. | ✅ |
+| **Existing Organization** | If creating a new organization is not feasible, you may use an existing one and update it's settings. | ❌ |
 
 ### Step 2: Configure the Organization
 
@@ -34,9 +34,9 @@ Enable Codespace access for organization members:
 
 Configure GitHub Actions permissions at `Organization Settings` > `Actions` > `General`.
 
-| Option                        | Configuration                                                                         | Notes                                                                                                                                                                                                                                              |
-| :---------------------------- | :------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Option 1 (Simple)**         | Select `Allow all actions and reusable workflows`.                                    | This is the simplest approach and ensures compatibility as new exercises are developed.                                                                                                                                                            |
+| Option | Configuration | Notes |
+| :--- | :--- | :--- |
+| **Option 1 (Simple)** | Select `Allow all actions and reusable workflows`. | This is the simplest approach and ensures compatibility as new exercises are developed. |
 | **Option 2 (Select Actions)** | Select `Allow enterprise, and select non-enterprise, actions and reusable workflows`. | If your security policy requires a more restricted approach, you must add all actions from the official allow list to your organization's settings. You will need to update your allow list as new exercises are released to ensure compatibility. |
 
 The allow list of required actions and workflows is maintained [here](../actions-allowlist/simple.txt).
