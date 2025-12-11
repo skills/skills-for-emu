@@ -1,4 +1,20 @@
-## Frequently Asked Questions
+
+- [Why is special configuration needed for EMU users to use GitHub Skills?](#why-is-special-configuration-needed-for-emu-users-to-use-github-skills)
+- [Can we use our existing EMU organization for Skills exercises?](#can-we-use-our-existing-emu-organization-for-skills-exercises)
+- [Are enterprises using Data Residency (`ghe.com`) supported?](#are-enterprises-using-data-residency-ghecom-supported)
+- [What is the purpose of the actions allow list?](#what-is-the-purpose-of-the-actions-allow-list)
+- [Why is GitHub Codespaces required ?](#why-is-github-codespaces-required-)
+- [Why are GitHub Actions required?](#why-are-github-actions-required)
+- [How much will this cost?](#how-much-will-this-cost)
+- [Do I need this for regular non-EMU organizations?](#do-i-need-this-for-regular-non-emu-organizations)
+
+### Why is special configuration needed for EMU users to use GitHub Skills?
+
+GitHub Skills exercises were designed to be taken in an individual's GitHub account where each user has full control over their settings.
+
+Enterprise Managed User (EMU) accounts often do not have permissions to create repositories under their GitHub handles.
+
+This guide helps you configure your organization with settings that will allow your employees to take the exercises within your organization.
 
 ### Can we use our existing EMU organization for Skills exercises?
 
@@ -21,5 +37,16 @@ The allow list specifies the minimum set of actions required for the exercises t
 
 ### Why is GitHub Codespaces required ?
 
+Many GitHub Skills exercises rely on GitHub Codespaces to provide a consistent, pre-configured development environment for learners.
+
+### Why are GitHub Actions required?
+
+GitHub Skills exercises use GitHub Actions for the automated learning experience. The user is guided through the exercise with automated feedback, validation and step by step instructions delivered via GitHub Actions workflows we created.
+
 ### How much will this cost?
 
+There is no additional cost to use GitHub Skills other than the standard costs associated with GitHub Codespaces and GitHub Actions usage.
+
+### Do I need this for regular non-EMU organizations?
+
+No. If your users have standard GitHub accounts that they own, they can take GitHub Skills exercises without any special configuration, within their own accounts.
