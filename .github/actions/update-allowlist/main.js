@@ -324,4 +324,3 @@ async function updateAllowlists(github) {
 module.exports = {
   updateAllowlists,
 };
-}
