@@ -273,12 +273,55 @@ async function analyzeAllExercises(github) {
   return allResults;
 }
 
-module.exports = {
-  parseActionReferences,
-  findExerciseRepositories,
-  getWorkflowAndStepFiles,
-  getFileContent,
-  analyzeExerciseRepository,
-  analyzeAllExercises,
-};
+/**
+ * Updates both strict and simple allowlists based on exercise repository analysis
+ * @param {Object} github - GitHub SDK instance from github-script
+ * @returns {Promise<Object>} Object with counts of entries written
+ */
+async function updateAllowlists(github) {
+  const strictPath = process.env.STRICT_ALLOWLIST_PATH;
+  const simplePath = process.env.SIMPLE_ALLOWLIST_PATH;
+  
+  if (!strictPath || !simplePath) {
+    throw new Error('Environment variables STRICT_ALLOWLIST_PATH and SIMPLE_ALLOWLIST_PATH must be set');
+  }
+  
+  // Get all action references
+  const results = await analyzeAllExercises(github);
+  
+  // Sort results for consistent output
+  results.sort((a, b) => a.full.localeCompare(b.full));
+  
+  // Generate strict allowlist (with specific versions)
+  const strictEntries = results.map(ref => ref.full);
+  
+  // Generate simple allowlist (with wildcards, no specific versions)
+  const simpleEntries = results.map(ref => {
+    if (ref.path) {
+      return `${ref.owner}/${ref.repo}/${ref.path}@*`;
+    }
+    return `${ref.owner}/${ref.repo}@*`;
+  });
+  
+  // Remove duplicates from simple list (since we're using wildcards)
+  const uniqueSimple = [...new Set(simpleEntries)].sort();
+  
+  // Write files with commas between entries, but not after the last one
+  const fs = require('fs');
+  fs.writeFileSync(strictPath, strictEntries.join(',\n') + '\n');
+  fs.writeFileSync(simplePath, uniqueSimple.join(',\n') + '\n');
+  
+  console.log(`\n=== Allowlists Updated Successfully ===`);
+  console.log(`Strict allowlist: ${strictEntries.length} entries written to ${strictPath}`);
+  console.log(`Simple allowlist: ${uniqueSimple.length} entries written to ${simplePath}`);
+  
+  return {
+    strict: strictEntries.length,
+    simple: uniqueSimple.length
+  };
+}
 
+module.exports = {
+  updateAllowlists,
+};
+}

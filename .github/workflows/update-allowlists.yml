@@ -1,0 +1,50 @@
+name: Update Action Allowlists
+
+on:
+  schedule:
+    # Run every Friday at 8:00 AM UTC
+    - cron: '0 8 * * 5'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-allowlists:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Update allowlists
+        uses: actions/github-script@v7.0.1
+        env:
+          STRICT_ALLOWLIST_PATH: actions-allowlist/strict.txt
+          SIMPLE_ALLOWLIST_PATH: actions-allowlist/simple.txt
+        with:
+          script: |
+            const { updateAllowlists } = require('./.github/actions/update-allowlist/main.js');
+            
+            await updateAllowlists(github);
+            
+
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7.0.6
+        with:
+          branch: update-allowlists
+          delete-branch: true
+          commit-message: 'Update action allowlists'
+          title: 'Update Action Allowlists'
+          body: |
+            ## Automated Allowlist Update
+            
+            This PR updates the action allowlists with the latest list of GitHub Actions required to run all GitHub Skills exercises.
+            
