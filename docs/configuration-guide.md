@@ -39,7 +39,7 @@ Configure GitHub Actions permissions at `Organization Settings` > `Actions` > `G
 | **Option 1 (Simple)** | Select `Allow all actions and reusable workflows`. | This is the simplest approach and ensures compatibility as new exercises are developed. |
 | **Option 2 (Select Actions)** | Select `Allow enterprise, and select non-enterprise, actions and reusable workflows`. | If your security policy requires a more restricted approach, you must add all actions from the official allow list to your organization's settings. You will need to update your allow list as new exercises are released to ensure compatibility. |
 
-If you choose option 2 - the allow list of required actions and workflows is maintained [here](../actions-allowlist/simple.txt).
+If you choose option 2 - the allow list of required actions and workflows is maintained [here](../actions-allowlist/simple.txt). To automate keeping your organization's Actions permissions in sync with this list, see [Automated updates with Terraform or OpenTofu](automated-updates-with-tf.md).
 
 ### Step 3: Test your configuration
 
