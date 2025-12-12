@@ -91,68 +91,74 @@ async function findExerciseRepositories(github, orgs = ["skills", "skills-dev"])
 }
 
 /**
- * Recursively gets all files from a directory in a repository
+ * Gets all workflow and step files from a repository using Git Trees API
+ * This uses only ONE API call instead of multiple recursive calls
  * @param {Object} github - GitHub SDK instance
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
- * @param {string} path - Directory path
- * @param {Array<Object>} fileList - Accumulated list of file objects
  * @returns {Promise<Array<Object>>} Array of file objects with path and sha
  */
-async function getFilesFromDirectory(github, owner, repo, path, fileList = []) {
+async function getWorkflowAndStepFiles(github, owner, repo) {
   try {
-    const { data } = await github.rest.repos.getContent({
+    // Get the default branch
+    const { data: repoData } = await github.rest.repos.get({ owner, repo });
+    const defaultBranch = repoData.default_branch;
+
+    // Get entire repository tree in ONE recursive API call
+    const { data: tree } = await github.rest.git.getTree({
       owner,
       repo,
-      path,
+      tree_sha: defaultBranch,
+      recursive: true,
     });
 
-    // If it's an array, it's a directory listing
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item.type === "file") {
-          fileList.push({ path: item.path, sha: item.sha });
-        } else if (item.type === "dir") {
-          await getFilesFromDirectory(github, owner, repo, item.path, fileList);
-        }
-      }
-    }
+    // Filter for workflow and step files only
+    const files = tree.tree
+      .filter(item => 
+        item.type === "blob" && 
+        (item.path.startsWith(".github/workflows/") || 
+         item.path.startsWith(".github/steps/"))
+      )
+      .map(item => ({ path: item.path, sha: item.sha }));
+
+    return files;
   } catch (error) {
-    // Directory doesn't exist, return what we have
     if (error.status === 404) {
-      console.log(`  Directory ${path} not found in ${owner}/${repo} (skipping)`);
-      return fileList;
+      console.log(`  Repository ${owner}/${repo} not found or tree unavailable (skipping)`);
+      return [];
     }
-    console.error(`  Error accessing ${path} in ${owner}/${repo}:`, error.message);
+    if (error.status === 409) {
+      // Empty repository
+      console.log(`  Repository ${owner}/${repo} is empty (skipping)`);
+      return [];
+    }
+    console.error(`  Error fetching tree for ${owner}/${repo}:`, error.message);
     throw error;
   }
-
-  return fileList;
 }
 
 /**
- * Gets file content from a repository
+ * Gets file content from a repository using Git Blob API
  * @param {Object} github - GitHub SDK instance
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
- * @param {string} path - File path
+ * @param {string} sha - File SHA from git tree
+ * @param {string} path - File path (for logging only)
  * @returns {Promise<string>} File contents
  */
-async function getFileContent(github, owner, repo, path) {
+async function getFileContent(github, owner, repo, sha, path = '') {
   try {
-    const { data } = await github.rest.repos.getContent({
+    const { data } = await github.rest.git.getBlob({
       owner,
       repo,
-      path,
-      mediaType: {
-        format: "raw", // Gets raw content instead of base64
-      },
+      file_sha: sha,
     });
 
-    return data;
+    // Blob content is base64 encoded
+    return Buffer.from(data.content, 'base64').toString('utf8');
   } catch (error) {
     if (error.status === 404) {
-      console.error(`  File not found: ${path} in ${owner}/${repo}`);
+      console.error(`  File not found: ${path} (SHA: ${sha}) in ${owner}/${repo}`);
       return "";
     }
     console.error(`  Error reading file ${path} in ${owner}/${repo}:`, error.message);
@@ -171,25 +177,43 @@ async function analyzeExerciseRepository(github, owner, repo) {
   const allReferences = [];
   const seen = new Set();
 
-  // Get all files from .github/workflows
-  const workflowFiles = await getFilesFromDirectory(github, owner, repo, ".github/workflows");
+  try {
+    // Get all workflow and step files in ONE API call using Git Trees API
+    const allFiles = await getWorkflowAndStepFiles(github, owner, repo);
+    console.log(`  Found ${allFiles.length} workflow/step files`);
 
-  // Get all files from .github/steps
-  const stepFiles = await getFilesFromDirectory(github, owner, repo, ".github/steps");
+    if (allFiles.length === 0) {
+      console.log(`  No workflow or step files found in ${owner}/${repo}`);
+      return allReferences;
+    }
 
-  const allFiles = [...workflowFiles, ...stepFiles];
+    // Process each file
+    for (const file of allFiles) {
+      try {
+        const content = await getFileContent(github, owner, repo, file.sha, file.path);
+        if (!content) {
+          console.log(`  Skipping empty file: ${file.path}`);
+          continue;
+        }
 
-  // Process each file
-  for (const file of allFiles) {
-    const content = await getFileContent(github, owner, repo, file.path);
-    const references = parseActionReferences(content);
+        const references = parseActionReferences(content);
 
-    for (const ref of references) {
-      if (!seen.has(ref.full)) {
-        seen.add(ref.full);
-        allReferences.push(ref);
+        for (const ref of references) {
+          if (!seen.has(ref.full)) {
+            seen.add(ref.full);
+            allReferences.push(ref);
+          }
+        }
+      } catch (error) {
+        console.error(`  Error processing file ${file.path}:`, error.message);
+        // Continue processing other files
       }
     }
+
+    console.log(`  Found ${allReferences.length} unique action references`);
+  } catch (error) {
+    console.error(`  Error analyzing repository ${owner}/${repo}:`, error.message);
+    throw error;
   }
 
   return allReferences;
@@ -252,32 +276,9 @@ async function analyzeAllExercises(github) {
 module.exports = {
   parseActionReferences,
   findExerciseRepositories,
-  getFilesFromDirectory,
+  getWorkflowAndStepFiles,
   getFileContent,
   analyzeExerciseRepository,
   analyzeAllExercises,
 };
 
-// Debug execution - only runs when file is executed directly
-if (require.main === module) {
-  (async () => {
-    console.log("Debug mode: Running analyzeAllExercises...");
-    
-    // Mock GitHub SDK for debugging
-    // Replace this with actual GitHub token if needed: process.env.GITHUB_TOKEN
-    const { Octokit } = require("@octokit/rest");
-    const github = new Octokit({
-      auth: process.env.GITHUB_TOKEN || undefined,
-    });
-
-    try {
-      const results = await analyzeAllExercises(github);
-      console.log("\nResults:");
-      console.log(JSON.stringify(results, null, 2));
-      console.log(`\nTotal unique actions found: ${results.length}`);
-    } catch (error) {
-      console.error("Error during analysis:", error);
-      process.exit(1);
-    }
-  })();
-}
