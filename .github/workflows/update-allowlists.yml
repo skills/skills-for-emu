@@ -34,14 +34,13 @@ jobs:
             
             await updateAllowlists(github);
             
-
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7.0.6
         with:
           branch: update-allowlists
           delete-branch: true
           commit-message: 'Update action allowlists'
+          reviewers: FidelusAleksander
           title: 'Update Action Allowlists'
           body: |
             ## Automated Allowlist Update
