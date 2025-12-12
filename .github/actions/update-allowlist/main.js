@@ -1,4 +1,30 @@
 /**
+ * Repositories to exclude from analysis workflows
+ */
+const SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST = [
+  "skills/code-with-codespaces",
+  "skills/communicate-using-markdown",
+  "skills/configure-codeql-language-matrix",
+  "skills/connect-the-dots",
+  "skills/deploy-to-azure",
+  "skills/github-pages",
+  "skills/hello-github-actions",
+  "skills/introduction-to-codeql",
+  "skills/introduction-to-github",
+  "skills/introduction-to-secret-scanning",
+  "skills/publish-packages",
+  "skills/release-based-workflow",
+  "skills/resolve-merge-conflicts",
+  "skills/reusable-workflows",
+  "skills/review-pull-requests",
+  "skills/secure-code-game",
+  "skills/secure-repository-supply-chain",
+  "skills/test-with-actions",
+  "skills/write-javascript-actions",
+  "skills/change-commit-history"
+];
+
+/**
  * Parses file contents to extract GitHub Actions and reusable workflow references
  * @param {string} fileContents - The contents of a workflow file or markdown file
  * @returns {Array} Array of objects with {full, owner, repo, path, ref}
@@ -46,15 +72,22 @@ async function findExerciseRepositories(github, orgs = ["skills", "skills-dev"])
   const allRepos = [];
 
   for (const org of orgs) {
-    const { data: repos } = await github.rest.search.repos({
-      q: `org:${org} topic:skills-course archived:false`,
-      per_page: 100,
-    });
+    try {
+      const { data: repos } = await github.rest.search.repos({
+        q: `org:${org} topic:skills-course archived:false fork:true`,
+        per_page: 100,
+      });
 
-    allRepos.push(...repos.items.map((repo) => repo.full_name));
+      console.log(`Found ${repos.items.length} repositories in ${org}`);
+      allRepos.push(...repos.items.map((repo) => repo.full_name));
+    } catch (error) {
+      console.error(`Error searching repositories in ${org}:`, error.message);
+      throw error;
+    }
   }
 
-  return allRepos;
+  // Filter out ignored repositories
+  return allRepos.filter((repo) => !SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST.includes(repo));
 }
 
 /**
@@ -87,8 +120,10 @@ async function getFilesFromDirectory(github, owner, repo, path, fileList = []) {
   } catch (error) {
     // Directory doesn't exist, return what we have
     if (error.status === 404) {
+      console.log(`  Directory ${path} not found in ${owner}/${repo} (skipping)`);
       return fileList;
     }
+    console.error(`  Error accessing ${path} in ${owner}/${repo}:`, error.message);
     throw error;
   }
 
@@ -104,16 +139,25 @@ async function getFilesFromDirectory(github, owner, repo, path, fileList = []) {
  * @returns {Promise<string>} File contents
  */
 async function getFileContent(github, owner, repo, path) {
-  const { data } = await github.rest.repos.getContent({
-    owner,
-    repo,
-    path,
-    mediaType: {
-      format: "raw", // Gets raw content instead of base64
-    },
-  });
+  try {
+    const { data } = await github.rest.repos.getContent({
+      owner,
+      repo,
+      path,
+      mediaType: {
+        format: "raw", // Gets raw content instead of base64
+      },
+    });
 
-  return data;
+    return data;
+  } catch (error) {
+    if (error.status === 404) {
+      console.error(`  File not found: ${path} in ${owner}/${repo}`);
+      return "";
+    }
+    console.error(`  Error reading file ${path} in ${owner}/${repo}:`, error.message);
+    throw error;
+  }
 }
 
 /**
@@ -160,20 +204,46 @@ async function analyzeAllExercises(github) {
   const repos = await findExerciseRepositories(github);
   const allResults = [];
   const seen = new Set();
+  const errors = [];
+  let processedCount = 0;
+
+  console.log(`\nAnalyzing ${repos.length} repositories...\n`);
 
   for (const repoFullName of repos) {
     const [owner, repo] = repoFullName.split("/");
+    processedCount++;
 
-    console.log(`Analyzing ${repoFullName}...`);
+    console.log(`[${processedCount}/${repos.length}] Analyzing ${repoFullName}...`);
 
-    const references = await analyzeExerciseRepository(github, owner, repo);
+    try {
+      const references = await analyzeExerciseRepository(github, owner, repo);
 
-    for (const ref of references) {
-      if (!seen.has(ref.full)) {
-        seen.add(ref.full);
-        allResults.push(ref);
+      for (const ref of references) {
+        if (!seen.has(ref.full)) {
+          seen.add(ref.full);
+          allResults.push(ref);
+        }
       }
+      
+      console.log(`  ✓ Successfully analyzed ${repoFullName}`);
+    } catch (error) {
+      console.error(`  ✗ Failed to analyze ${repoFullName}:`, error.message);
+      errors.push({ repo: repoFullName, error: error.message });
+      // Continue with next repository
     }
+  }
+
+  console.log(`\n=== Analysis Complete ===`);
+  console.log(`Repositories processed: ${processedCount}`);
+  console.log(`Successful: ${processedCount - errors.length}`);
+  console.log(`Failed: ${errors.length}`);
+  console.log(`Total unique actions/workflows found: ${allResults.length}`);
+
+  if (errors.length > 0) {
+    console.log(`\nRepositories with errors:`);
+    errors.forEach(({ repo, error }) => {
+      console.log(`  - ${repo}: ${error}`);
+    });
   }
 
   return allResults;
@@ -187,3 +257,27 @@ module.exports = {
   analyzeExerciseRepository,
   analyzeAllExercises,
 };
+
+// Debug execution - only runs when file is executed directly
+if (require.main === module) {
+  (async () => {
+    console.log("Debug mode: Running analyzeAllExercises...");
+    
+    // Mock GitHub SDK for debugging
+    // Replace this with actual GitHub token if needed: process.env.GITHUB_TOKEN
+    const { Octokit } = require("@octokit/rest");
+    const github = new Octokit({
+      auth: process.env.GITHUB_TOKEN || undefined,
+    });
+
+    try {
+      const results = await analyzeAllExercises(github);
+      console.log("\nResults:");
+      console.log(JSON.stringify(results, null, 2));
+      console.log(`\nTotal unique actions found: ${results.length}`);
+    } catch (error) {
+      console.error("Error during analysis:", error);
+      process.exit(1);
+    }
+  })();
+}
