@@ -1,4 +1,3 @@
-
 - [Why is special configuration needed for EMU users to use GitHub Skills?](#why-is-special-configuration-needed-for-emu-users-to-use-github-skills)
 - [Can we use our existing EMU organization for Skills exercises?](#can-we-use-our-existing-emu-organization-for-skills-exercises)
 - [Are enterprises using Data Residency (`ghe.com`) supported?](#are-enterprises-using-data-residency-ghecom-supported)
@@ -7,6 +6,8 @@
 - [Why are GitHub Actions required?](#why-are-github-actions-required)
 - [How much will this cost?](#how-much-will-this-cost)
 - [Do I need this for regular non-EMU organizations?](#do-i-need-this-for-regular-non-emu-organizations)
+- [The copy exercise button suggests a repository name that is already taken. What should I do?](#the-copy-exercise-button-suggests-a-repository-name-that-is-already-taken-what-should-i-do)
+- [Can exercises be created in the EMU user handle instead of an organization?](#can-exercises-be-created-in-the-emu-user-handle-instead-of-an-organization)
 
 ### Why is special configuration needed for EMU users to use GitHub Skills?
 
@@ -50,3 +51,15 @@ There is no additional cost to use GitHub Skills other than the standard costs a
 ### Do I need this for regular non-EMU organizations?
 
 No. If your users have standard GitHub accounts that they own, they can take GitHub Skills exercises without any special configuration, within their own accounts.
+
+### The copy exercise button suggests a repository name that is already taken. What should I do?
+
+Each exercise has a button to "Copy Exercise" which pre-fills the repository name based on the exercise title.
+
+When creating an exercise within an organization, it is a good idea to add a unique identifier to the repository name, such as your name or initials.
+
+For example, if the suggested repository name is `skills-getting-started-with-github-copilot`, you could change it to `skills-getting-started-with-github-copilot-johndoe` to ensure it is unique across the organization.
+
+### Can exercises be created in the EMU user handle instead of an organization?
+
+Since GitHub Codespaces are not available for EMU user accounts, exercises that depend on Codespaces should be created within an organization that has Codespaces enabled.
