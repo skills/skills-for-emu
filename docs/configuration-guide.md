@@ -69,4 +69,4 @@ Now, test your setup by starting an exercise from the [GitHub Skills catalogue](
 >[!TIP]
 > If you encounter any issues, refer to the [FAQ](../faq.md) for troubleshooting tips and common questions. 
 >
-> If that doesn't help, please [open an issue](../issues/new) 
+> If that doesn't help, please [open an issue](https://github.com/skills/skills-for-emu/issues/new)
