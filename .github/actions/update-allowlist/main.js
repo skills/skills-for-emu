@@ -1,30 +1,4 @@
 /**
- * Repositories to exclude from analysis workflows
- */
-const SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST = [
-  "skills/code-with-codespaces",
-  "skills/communicate-using-markdown",
-  "skills/configure-codeql-language-matrix",
-  "skills/connect-the-dots",
-  "skills/deploy-to-azure",
-  "skills/github-pages",
-  "skills/hello-github-actions",
-  "skills/introduction-to-codeql",
-  "skills/introduction-to-github",
-  "skills/introduction-to-secret-scanning",
-  "skills/publish-packages",
-  "skills/release-based-workflow",
-  "skills/resolve-merge-conflicts",
-  "skills/reusable-workflows",
-  "skills/review-pull-requests",
-  "skills/secure-code-game",
-  "skills/secure-repository-supply-chain",
-  "skills/test-with-actions",
-  "skills/write-javascript-actions",
-  "skills/change-commit-history"
-];
-
-/**
  * Parses file contents to extract GitHub Actions and reusable workflow references
  * @param {string} fileContents - The contents of a workflow file or markdown file
  * @returns {Array} Array of objects with {full, owner, repo, path, ref}
@@ -68,7 +42,7 @@ function parseActionReferences(fileContents) {
  * @param {Array<string>} orgs - Array of organization names to search
  * @returns {Promise<Array<string>>} Array of repository full names (org/repo)
  */
-async function findExerciseRepositories(github, orgs = ["skills", "skills-dev"]) {
+async function findExerciseRepositories(github, orgs = ["skills"]) {
   const allRepos = [];
 
   for (const org of orgs) {
@@ -86,8 +60,7 @@ async function findExerciseRepositories(github, orgs = ["skills", "skills-dev"])
     }
   }
 
-  // Filter out ignored repositories
-  return allRepos.filter((repo) => !SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST.includes(repo));
+  return allRepos;
 }
 
 /**
