@@ -68,7 +68,7 @@ function parseActionReferences(fileContents) {
  * @param {Array<string>} orgs - Array of organization names to search
  * @returns {Promise<Array<string>>} Array of repository full names (org/repo)
  */
-async function findExerciseRepositories(github, orgs = ["skills", "skills-dev"]) {
+async function findExerciseRepositories(github, orgs = ["skills"]) {
   const allRepos = [];
 
   for (const org of orgs) {
