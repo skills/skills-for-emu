@@ -6,8 +6,6 @@ const SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST = [
   "skills/connect-the-dots",
   "skills/deploy-to-azure",
   "skills/release-based-workflow",
-  "skills/reusable-workflows",
-  "skills/review-pull-requests",
   "skills/secure-code-game",
   "skills/change-commit-history"
 ];
