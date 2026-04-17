@@ -62,6 +62,7 @@ async function findExerciseRepositories(github, orgs = ["skills"]) {
     try {
       let page = 1;
       let hasMore = true;
+      let orgRepoCount = 0;
 
       while (hasMore) {
         const { data: repos } = await github.request(
@@ -76,17 +77,19 @@ async function findExerciseRepositories(github, orgs = ["skills"]) {
         const matchingRepos = repos.filter((repo) =>
           repo.properties.some(
             (prop) =>
-              prop.property_name === "skills-course" && prop.value === "true"
+              prop.property_name === "skills-course" &&
+              (prop.value === "true" || prop.value === true)
           )
         );
 
         allRepos.push(...matchingRepos.map((repo) => repo.repository_full_name));
+        orgRepoCount += matchingRepos.length;
 
         hasMore = repos.length === 100;
         page++;
       }
 
-      console.log(`Found ${allRepos.length} exercise repositories in ${org}`);
+      console.log(`Found ${orgRepoCount} exercise repositories in ${org}`);
     } catch (error) {
       console.error(
         `Error listing custom property values for ${org}:`,
