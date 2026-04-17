@@ -49,7 +49,8 @@ function parseActionReferences(fileContents) {
 }
 
 /**
- * Finds all exercise repositories with the skills-course topic
+ * Finds all exercise repositories using the custom property values API
+ * Repositories with the "skills-course" custom property set to "true" are considered exercise repositories
  * @param {Object} github - GitHub SDK instance from github-script
  * @param {Array<string>} orgs - Array of organization names to search
  * @returns {Promise<Array<string>>} Array of repository full names (org/repo)
@@ -59,21 +60,46 @@ async function findExerciseRepositories(github, orgs = ["skills"]) {
 
   for (const org of orgs) {
     try {
-      const { data: repos } = await github.rest.search.repos({
-        q: `org:${org} topic:skills-course archived:false fork:true`,
-        per_page: 100,
-      });
+      let page = 1;
+      let hasMore = true;
 
-      console.log(`Found ${repos.items.length} repositories in ${org}`);
-      allRepos.push(...repos.items.map((repo) => repo.full_name));
+      while (hasMore) {
+        const { data: repos } = await github.request(
+          "GET /orgs/{org}/properties/values",
+          {
+            org,
+            per_page: 100,
+            page,
+          }
+        );
+
+        const matchingRepos = repos.filter((repo) =>
+          repo.properties.some(
+            (prop) =>
+              prop.property_name === "skills-course" && prop.value === "true"
+          )
+        );
+
+        allRepos.push(...matchingRepos.map((repo) => repo.repository_full_name));
+
+        hasMore = repos.length === 100;
+        page++;
+      }
+
+      console.log(`Found ${allRepos.length} exercise repositories in ${org}`);
     } catch (error) {
-      console.error(`Error searching repositories in ${org}:`, error.message);
+      console.error(
+        `Error listing custom property values for ${org}:`,
+        error.message
+      );
       throw error;
     }
   }
 
   // Filter out ignored repositories
-  return allRepos.filter((repo) => !SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST.includes(repo));
+  return allRepos.filter(
+    (repo) => !SKILLS_EXERCISE_REPOSITORY_IGNORE_LIST.includes(repo)
+  );
 }
 
 /**
