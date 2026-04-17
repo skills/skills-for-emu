@@ -29,12 +29,12 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: skills
 
       - name: Update allowlists
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v9.0.0
         env:
           STRICT_ALLOWLIST_PATH: actions-allowlist/strict.txt
           SIMPLE_ALLOWLIST_PATH: actions-allowlist/simple.txt
@@ -46,7 +46,7 @@ jobs:
             await updateAllowlists(github);
             
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7.0.6
+        uses: peter-evans/create-pull-request@v8.1.1
         with:
           branch: update-allowlists
           delete-branch: true
