@@ -50,7 +50,7 @@ function parseActionReferences(fileContents) {
 
 /**
  * Finds all exercise repositories using the custom property values API
- * Repositories with the "skills-course" custom property set to "true" are considered exercise repositories
+ * Repositories with the "repo-type" custom property set to "exercise" are considered exercise repositories
  * @param {Object} github - GitHub SDK instance from github-script
  * @param {Array<string>} orgs - Array of organization names to search
  * @returns {Promise<Array<string>>} Array of repository full names (org/repo)
@@ -77,8 +77,7 @@ async function findExerciseRepositories(github, orgs = ["skills"]) {
         const matchingRepos = repos.filter((repo) =>
           repo.properties.some(
             (prop) =>
-              prop.property_name === "skills-course" &&
-              (prop.value === "true" || prop.value === true)
+              prop.property_name === "repo-type" && prop.value === "exercise"
           )
         );
 
