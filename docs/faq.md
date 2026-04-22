@@ -25,10 +25,10 @@ This approach isolates learning environments from production work which may diff
 
 ### Are enterprises using Data Residency (`ghe.com`) supported?
 
-Enterprises using Data Residency on `ghe.com` are not supported due to critical limitations, including:
+Enterprises using Data Residency on `ghe.com` are not supported due to critical limitations, the most important being:
 
-- GitHub Codespaces are unavailable.
 - GitHub Actions differences on `ghe.com` prevent necessary workflows from running.
+- Different API's / logging in mechanisms apply to `ghe.com` which are not described in the exercises
 
 ### What is the purpose of the actions allow list?
 
