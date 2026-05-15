@@ -46,8 +46,10 @@ jobs:
             await updateAllowlists(github);
             
       - name: Create Pull Request
+        id: create-pr
         uses: peter-evans/create-pull-request@v8.1.1
         with:
+          token: ${{ steps.generate-token.outputs.token }}
           branch: update-allowlists
           delete-branch: true
           commit-message: 'Update action allowlists'
@@ -57,4 +59,10 @@ jobs:
             ## Automated Allowlist Update
             
             This PR updates the action allowlists with the latest list of GitHub Actions required to run all GitHub Skills exercises.
-            
+
+      - name: Enable auto-merge (squash)
+        if: steps.create-pr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --squash --auto
+
