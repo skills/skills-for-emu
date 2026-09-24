@@ -52,7 +52,7 @@ jobs:
           branch: update-allowlists
           delete-branch: true
           commit-message: 'Update action allowlists'
-          reviewers: FidelusAleksander
+          reviewers: v-fidelusaleksander
           title: 'Update Action Allowlists'
           body: |
             ## Automated Allowlist Update
